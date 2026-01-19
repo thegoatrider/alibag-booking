@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/admin/create-owner/route": "/api/admin/create-owner",
+  "/bucket/[bucketId]/page": "/bucket/[bucketId]",
+  "/bucket/[bucketId]/rooms/page": "/bucket/[bucketId]/rooms",
+  "/dashboard/admin/page": "/dashboard/admin",
+  "/dashboard/admin/properties/page": "/dashboard/admin/properties",
+  "/dashboard/guest/page": "/dashboard/guest",
+  "/dashboard/owner/page": "/dashboard/owner",
+  "/favicon.ico/route": "/favicon.ico",
+  "/p/[slug]/page": "/p/[slug]",
+  "/page": "/",
+  "/signup/page": "/signup"
+}

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 18, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/goatr/alibag-booking/app/page.tsx"],"sourcesContent":["export default function Home() {\n  return (\n    <main className=\"min-h-screen flex items-center justify-center gap-4\">\n      <a\n        href=\"/dashboard/admin\"\n        className=\"border px-6 py-3 rounded\"\n      >\n        Go to Admin\n      </a>\n\n      <a\n        href=\"/dashboard/owner\"\n        className=\"border px-6 py-3 rounded\"\n      >\n        Go to Owner\n      </a>\n\n      <a\n        href=\"/dashboard/guest\"\n        className=\"border px-6 py-3 rounded\"\n      >\n        Go to Guest\n      </a>\n    </main>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,8OAAC;QAAK,WAAU;;0BACd,8OAAC;gBACC,MAAK;gBACL,WAAU;0BACX;;;;;;0BAID,8OAAC;gBACC,MAAK;gBACL,WAAU;0BACX;;;;;;0BAID,8OAAC;gBACC,MAAK;gBACL,WAAU;0BACX;;;;;;;;;;;;AAKP"}}]
+}
