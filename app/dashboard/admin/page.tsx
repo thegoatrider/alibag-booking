@@ -1,110 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function AdminDashboard() {
-  const router = useRouter();
-
-  const [owners, setOwners] = useState<any[]>([]);
-  const [areas, setAreas] = useState<any[]>([]);
-
-  const [ownerName, setOwnerName] = useState("");
-  const [ownerEmail, setOwnerEmail] = useState("");
-  const [areaName, setAreaName] = useState("");
-
-  useEffect(() => {
-    fetchOwners();
-    fetchAreas();
-  }, []);
-
-  const fetchOwners = async () => {
-    const { data } = await supabase.from("owners").select("*");
-    setOwners(data || []);
-  };
-
-  const fetchAreas = async () => {
-    const { data } = await supabase.from("areas").select("*");
-    setAreas(data || []);
-  };
-
-  const createOwner = async () => {
-    if (!ownerName || !ownerEmail) return alert("Fill all fields");
-
-    await supabase.from("owners").insert({
-      name: ownerName,
-      email: ownerEmail,
-    });
-
-    setOwnerName("");
-    setOwnerEmail("");
-    fetchOwners();
-  };
-
-  const createArea = async () => {
-    if (!areaName) return alert("Enter area");
-    await supabase.from("areas").insert({ name: areaName });
-    setAreaName("");
-    fetchAreas();
-  };
-
   return (
-    <main className="p-10 max-w-xl space-y-6">
+    <main className="p-10 max-w-4xl space-y-6">
       <h1 className="text-2xl font-bold">Admin Dashboard</h1>
 
-      {/* CREATE OWNER */}
-      <div className="border p-6 rounded space-y-3">
-        <h2 className="font-semibold">Create Owner</h2>
-
-        <input
-          className="border p-2 w-full"
-          placeholder="Owner name"
-          value={ownerName}
-          onChange={(e) => setOwnerName(e.target.value)}
-        />
-
-        <input
-          className="border p-2 w-full"
-          placeholder="Owner email"
-          value={ownerEmail}
-          onChange={(e) => setOwnerEmail(e.target.value)}
-        />
-
-        <button
-          onClick={createOwner}
-          className="bg-black text-white px-4 py-2"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Link
+          href="/dashboard/admin/properties"
+          className="border rounded-xl p-6 hover:bg-neutral-900 transition"
         >
-          Create Owner
-        </button>
-      </div>
-
-      {/* CREATE AREA */}
-      <div className="border p-6 rounded space-y-3">
-        <h2 className="font-semibold">Create Area</h2>
-
-        <input
-          className="border p-2 w-full"
-          placeholder="Area name"
-          value={areaName}
-          onChange={(e) => setAreaName(e.target.value)}
-        />
-
-        <button
-          onClick={createArea}
-          className="bg-black text-white px-4 py-2"
+          <h2 className="text-lg font-semibold">Manage Properties</h2>
+          <p className="text-sm text-gray-400">
+            Create & assign hotels / villas
+          </p>
+        </Link>
+<button
+  onClick={() => window.location.href = "/dashboard/admin/influencers/analytics"}
+  className="bg-purple-600 px-4 py-2 rounded"
+>
+  Influencer Analytics
+</button>
+        <Link
+          href="/dashboard/admin/influencers"
+          className="border rounded-xl p-6 hover:bg-neutral-900 transition"
         >
-          Add Area
-        </button>
+          <h2 className="text-lg font-semibold">Influencer Management</h2>
+          <p className="text-sm text-gray-400">
+            Create influencers & assign commissions
+          </p>
+        </Link>
       </div>
-
-      {/* MANAGE PROPERTIES */}
-      <button
-        onClick={() => router.push("/dashboard/admin/properties")}
-        className="bg-blue-600 text-white px-4 py-2 w-full"
-      >
-        Manage Properties
-      </button>
     </main>
   );
 }
