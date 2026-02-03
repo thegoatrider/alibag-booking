@@ -21,6 +21,13 @@ export default function Home() {
       >
         Go to Guest
       </a>
+
+      <a
+        href="/dashboard/influencer"
+        className="border px-6 py-3 rounded"
+      >
+        Go to Influencer Dashboard
+      </a>
     </main>
   );
 }

@@ -19,7 +19,7 @@ export default function AdminDashboard() {
         </Link>
 <button
   onClick={() => window.location.href = "/dashboard/admin/influencers/analytics"}
-  className="bg-purple-600 px-4 py-2 rounded"
+  className="border rounded-xl p-6 hover:bg-neutral-900 transition"
 >
   Influencer Analytics
 </button>

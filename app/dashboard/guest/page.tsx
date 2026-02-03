@@ -1,146 +1,127 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function GuestDashboard() {
   const router = useRouter();
 
-  const [step, setStep] = useState<"search" | "results">("search");
-
-  const [city, setCity] = useState("Alibag");
+  const [city, setCity] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [budget, setBudget] = useState("");
+  const [type, setType] = useState<"room" | "villa" | "">("");
+  const [maxBudget, setMaxBudget] = useState("");
 
-  const [properties, setProperties] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const submit = () => {
+    if (!city || !checkIn || !checkOut || !type || !maxBudget) {
+      alert("Please fill all fields");
+      return;
+    }
 
-  const search = async () => {
-  if (!checkIn || !checkOut) {
-    alert("Select dates");
-    return;
-  }
-
-  setLoading(true);
-
-  const { data, error } = await supabase
-    .from("properties")
-    .select("id, name, slug, starting_price, areas(name)")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Property fetch error:", error);
-    alert("Failed to fetch properties");
-  }
-
-  console.log("PROPERTIES:", data); 
-
-  setProperties(data || []);
-  setLoading(false);
-  setStep("results");
-};
-
+    router.push(
+      `/guest/results?city=${encodeURIComponent(
+        city
+      )}&ci=${checkIn}&co=${checkOut}&type=${type}&budget=${maxBudget}`
+    );
+  };
 
   return (
-    <main className="min-h-screen bg-white text-black p-6 max-w-6xl mx-auto">
+    <main className="p-10 max-w-xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold">Find your stay</h1>
 
-      {/* SEARCH STEP */}
-      {step === "search" && (
-        <div className="max-w-xl mx-auto border rounded-2xl p-6 space-y-4 shadow">
-          <h1 className="text-2xl font-bold text-center">
-            Find your stay 🏨
-          </h1>
+      {/* CITY */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">City</label>
+        <input
+          className="border p-2 w-full rounded"
+          placeholder="Alibag"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+        />
+      </div>
 
-          <select
-            className="border p-2 w-full rounded"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          >
-            <option>Alibag</option>
-            <option>Goa</option>
-            <option>Lonavala</option>
-          </select>
-
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="date"
-              className="border p-2 rounded"
-              value={checkIn}
-              onChange={(e) => setCheckIn(e.target.value)}
-            />
-            <input
-              type="date"
-              className="border p-2 rounded"
-              value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
-            />
-          </div>
-
+      {/* DATES */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Dates</label>
+        <div className="flex gap-2">
           <input
+            type="date"
             className="border p-2 w-full rounded"
-            placeholder="Max budget (₹)"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
           />
+          <input
+            type="date"
+            className="border p-2 w-full rounded"
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
+          />
+        </div>
+      </div>
 
+      {/* TYPE */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Property Type</label>
+        <div className="flex gap-4">
           <button
-            onClick={search}
-            className="bg-black text-white w-full py-2 rounded"
+            type="button"
+            onClick={() => setType("room")}
+            className={`px-4 py-2 rounded border ${
+              type === "room" ? "bg-black text-white" : ""
+            }`}
           >
-            {loading ? "Searching..." : "Search"}
+            Room
+          </button>
+          <button
+            type="button"
+            onClick={() => setType("villa")}
+            className={`px-4 py-2 rounded border ${
+              type === "villa" ? "bg-black text-white" : ""
+            }`}
+          >
+            Villa
           </button>
         </div>
-      )}
+      </div>
 
-      {/* RESULTS STEP */}
-      {step === "results" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">
-              Stays in {city}
-            </h1>
+      {/* BUDGET */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Max Budget (per night)</label>
+        <select
+          className="border p-2 w-full rounded"
+          value={maxBudget}
+          onChange={(e) => setMaxBudget(e.target.value)}
+        >
+          <option value="">Select budget</option>
 
-            <button
-              onClick={() => setStep("search")}
-              className="border px-3 py-1 rounded"
-            >
-              ← Modify search
-            </button>
-          </div>
-
-          {properties.length === 0 && (
-            <p>No properties found 😢</p>
+          {type === "room" && (
+            <>
+              <option value="999">₹999</option>
+              <option value="1299">₹1299</option>
+              <option value="1699">₹1699</option>
+              <option value="1999">₹1999</option>
+              <option value="2499">₹2499+</option>
+            </>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {properties.map((p) => (
-              <div
-                key={p.id}
-                className="border rounded-xl overflow-hidden shadow hover:shadow-lg transition cursor-pointer"
-                onClick={() =>
-                  router.push(
-                    `/p/${p.slug}?check_in=${checkIn}&check_out=${checkOut}`
-                  )
-                }
-              >
-                <div className="h-40 bg-gray-200"></div>
+          {type === "villa" && (
+            <>
+              <option value="4999">₹4,999</option>
+              <option value="7999">₹7,999</option>
+              <option value="12999">₹12,999</option>
+              <option value="19999">₹19,999+</option>
+            </>
+          )}
+        </select>
+      </div>
 
-                <div className="p-4 space-y-1">
-                  <div className="font-semibold">{p.name}</div>
-                  <div className="text-sm text-gray-500">
-                    {p.areas?.name}
-                  </div>
-                  <div className="font-medium">
-                    ₹{p.starting_price} / night
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* CTA */}
+      <button
+        onClick={submit}
+        className="w-full bg-black text-white py-3 rounded"
+      >
+        Show Available Properties
+      </button>
     </main>
   );
 }

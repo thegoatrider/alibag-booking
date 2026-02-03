@@ -4,48 +4,93 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function ManageProperties() {
+export default function AdminPropertiesPage() {
   const router = useRouter();
 
+  // owners / areas / properties
   const [owners, setOwners] = useState<any[]>([]);
   const [areas, setAreas] = useState<any[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
 
+  // create owner
+  const [ownerName, setOwnerName] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
+
+  // create property
   const [ownerId, setOwnerId] = useState("");
   const [name, setName] = useState("");
-  const [type, setType] = useState("hotel");
+  const [type, setType] = useState<"room" | "villa">("room");
   const [areaId, setAreaId] = useState("");
   const [price, setPrice] = useState("");
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    fetchOwners();
-    fetchAreas();
+    fetchAll();
   }, []);
 
-  const fetchOwners = async () => {
-    const { data } = await supabase.from("owners").select("*");
-    setOwners(data || []);
-  };
+  const fetchAll = async () => {
+    setLoading(true);
 
-  const fetchAreas = async () => {
-    const { data } = await supabase.from("areas").select("*");
-    setAreas(data || []);
-  };
-
-  const fetchProperties = async (oid: string) => {
-    const { data } = await supabase
-      .from("properties")
+    const { data: ownersData } = await supabase
+      .from("owners")
       .select("*")
-      .eq("owner_id", oid);
+      .order("created_at", { ascending: false });
 
-    setProperties(data || []);
+    const { data: areasData } = await supabase
+      .from("areas")
+      .select("*")
+      .order("name");
+
+    const { data: propertiesData } = await supabase
+      .from("properties")
+      .select(`
+        id,
+        name,
+        type,
+        starting_price,
+        areas ( name ),
+        owners ( name, email )
+      `)
+      .order("created_at", { ascending: false });
+
+    setOwners(ownersData || []);
+    setAreas(areasData || []);
+    setProperties(propertiesData || []);
+    setLoading(false);
   };
 
-  const createProperty = async () => {
-    if (!ownerId || !name || !areaId || !price)
-      return alert("Fill all fields");
+  // CREATE OWNER
+  const createOwner = async () => {
+    if (!ownerName || !ownerEmail) {
+      alert("Fill owner name & email");
+      return;
+    }
 
-    await supabase.from("properties").insert({
+    const { error } = await supabase.from("owners").insert({
+      name: ownerName,
+      email: ownerEmail,
+    });
+
+    if (error) {
+      console.error(error);
+      alert("Failed to create owner");
+      return;
+    }
+
+    setOwnerName("");
+    setOwnerEmail("");
+    fetchAll();
+  };
+
+  // CREATE PROPERTY
+  const createProperty = async () => {
+    if (!ownerId || !name || !areaId || !price) {
+      alert("Fill all property fields");
+      return;
+    }
+
+    const { error } = await supabase.from("properties").insert({
       owner_id: ownerId,
       name,
       type,
@@ -53,98 +98,145 @@ export default function ManageProperties() {
       starting_price: Number(price),
     });
 
+    if (error) {
+      console.error(error);
+      alert("Failed to create property");
+      return;
+    }
+
     setName("");
     setPrice("");
-    fetchProperties(ownerId);
+    fetchAll();
   };
 
+  if (loading) {
+    return <p className="p-10">Loading...</p>;
+  }
+
   return (
-    <main className="p-10 max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">Manage Properties</h1>
+    <main className="p-10 max-w-6xl space-y-10">
+      <h1 className="text-3xl font-bold">Admin · Properties</h1>
 
-      <select
-        className="border p-2 w-full"
-        value={ownerId}
-        onChange={(e) => {
-          setOwnerId(e.target.value);
-          fetchProperties(e.target.value);
-        }}
-      >
-        <option value="">Select Owner</option>
-        {owners.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name} — {o.email}
-          </option>
-        ))}
-      </select>
+      {/* CREATE OWNER */}
+      <section className="border p-6 rounded space-y-3">
+        <h2 className="text-xl font-semibold">Create Owner</h2>
 
-      {ownerId && (
-        <>
-          <div className="border p-6 rounded space-y-3">
-            <h2 className="font-semibold">Add Property</h2>
+        <input
+          className="border p-2 w-full"
+          placeholder="Owner name"
+          value={ownerName}
+          onChange={(e) => setOwnerName(e.target.value)}
+        />
 
-            <input
-              className="border p-2 w-full"
-              placeholder="Property name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+        <input
+          className="border p-2 w-full"
+          placeholder="Owner email"
+          value={ownerEmail}
+          onChange={(e) => setOwnerEmail(e.target.value)}
+        />
 
-            <select
-              className="border p-2 w-full"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-            >
-              <option value="hotel">Hotel</option>
-              <option value="villa">Villa</option>
-            </select>
+        <button
+          onClick={createOwner}
+          className="bg-black text-white px-4 py-2"
+        >
+          Add Owner
+        </button>
+      </section>
 
-            <select
-              className="border p-2 w-full"
-              value={areaId}
-              onChange={(e) => setAreaId(e.target.value)}
-            >
-              <option value="">Select Area</option>
-              {areas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+      {/* CREATE PROPERTY */}
+      <section className="border p-6 rounded space-y-3">
+        <h2 className="text-xl font-semibold">Create Property</h2>
 
-            <input
-              className="border p-2 w-full"
-              placeholder="Starting price"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
+        <select
+          className="border p-2 w-full"
+          value={ownerId}
+          onChange={(e) => setOwnerId(e.target.value)}
+        >
+          <option value="">Select Owner</option>
+          {owners.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name} — {o.email}
+            </option>
+          ))}
+        </select>
+
+        <input
+          className="border p-2 w-full"
+          placeholder="Property name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <select
+          className="border p-2 w-full"
+          value={type}
+          onChange={(e) => setType(e.target.value as "room" | "villa")}
+        >
+          <option value="room">Room</option>
+          <option value="villa">Villa</option>
+        </select>
+
+        <select
+          className="border p-2 w-full"
+          value={areaId}
+          onChange={(e) => setAreaId(e.target.value)}
+        >
+          <option value="">Select Area</option>
+          {areas.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          className="border p-2 w-full"
+          placeholder="Starting price"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+        />
+
+        <button
+          onClick={createProperty}
+          className="bg-indigo-600 text-white px-4 py-2"
+        >
+          Add Property
+        </button>
+      </section>
+
+      {/* PROPERTIES LIST */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">All Properties</h2>
+
+        {properties.map((p) => (
+          <div
+            key={p.id}
+            className="border p-5 rounded flex justify-between items-center"
+          >
+            <div>
+              <div className="font-semibold">{p.name}</div>
+              <div className="text-sm text-gray-600">
+                {p.type} • ₹{p.starting_price}
+              </div>
+              <div className="text-sm text-gray-500">
+                Area: {p.areas?.name}
+              </div>
+              <div className="text-sm text-gray-400">
+                Owner: {p.owners?.name}
+              </div>
+            </div>
 
             <button
-              onClick={createProperty}
-              className="bg-black text-white px-4 py-2"
+              onClick={() =>
+                router.push(`/dashboard/admin/properties/${p.id}`)
+              }
+              className="bg-indigo-600 text-white px-4 py-2 rounded"
             >
-              Add Property
+              Manage Property
             </button>
           </div>
-
-          <div className="space-y-2">
-            {properties.map((p) => (
-              <div key={p.id} className="border p-4 rounded">
-                {p.name} ({p.type}) – ₹{p.starting_price}
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() =>
-              router.push(`/dashboard/owner?owner_id=${ownerId}`)
-            }
-            className="bg-green-600 text-white px-4 py-2 w-full"
-          >
-            Open Owner Dashboard
-          </button>
-        </>
-      )}
+        ))}
+      </section>
     </main>
   );
 }
