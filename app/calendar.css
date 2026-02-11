@@ -1,0 +1,43 @@
+/* Airbnb-style calendar overrides */
+
+.rdp {
+  --rdp-accent-color: #000000;
+  --rdp-background-color: #000000;
+  --rdp-accent-color-dark: #000000;
+  --rdp-outline: none;
+
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+.rdp-months {
+  gap: 2rem;
+}
+
+.rdp-caption {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:hover {
+  background-color: black;
+  color: white;
+  border-radius: 9999px;
+}
+
+.rdp-day_range_middle {
+  background-color: #f3f3f3;
+  color: black;
+}
+
+.rdp-day_range_start,
+.rdp-day_range_end {
+  background-color: black;
+  color: white;
+  border-radius: 9999px;
+}
+
+.rdp-day:hover {
+  background-color: #eeeeee;
+  border-radius: 9999px;
+}

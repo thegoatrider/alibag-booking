@@ -1,110 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function GuestEntry() {
+export default function GuestLandingPage() {
   const router = useRouter();
 
-  const [city, setCity] = useState("");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [type, setType] = useState<"room" | "villa" | "">("");
-  const [budget, setBudget] = useState("");
-
-  const proceed = () => {
-    if (!city || !checkIn || !checkOut || !type || !budget) {
-      alert("Fill all fields");
-      return;
-    }
-
-    router.push(
-      `/guest/results?city=${city}&ci=${checkIn}&co=${checkOut}&type=${type}&budget=${budget}`
-    );
-  };
-
   return (
-    <main className="p-10 max-w-xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Find your stay</h1>
+    <main className="min-h-screen bg-neutral-950 text-gray-900 flex flex-col items-center justify-center px-6">
+      
+      {/* City */}
+      <h1 className="text-4xl font-bold mb-2">Alibag</h1>
+      <p className="text-gray-400 mb-10">Choose your stay type</p>
 
-      {/* CITY */}
-      <input
-        className="border p-2 w-full"
-        placeholder="City (e.g. Alibag)"
-        value={city}
-        onChange={(e) => setCity(e.target.value)}
-      />
+      {/* Property Type Selection */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-xl">
+        
+        <button
+          onClick={() => router.push("/guest/budget?type=room")}
+          className="border border-neutral-700 rounded-xl p-10 hover:bg-neutral-900 transition"
+        >
+          <h2 className="text-2xl font-semibold mb-2">Rooms</h2>
+          <p className="text-gray-400 text-sm">
+            Budget stays & hotels
+          </p>
+        </button>
 
-      {/* DATES */}
-      <div className="flex gap-2">
-        <input
-          type="date"
-          className="border p-2 w-full"
-          value={checkIn}
-          onChange={(e) => setCheckIn(e.target.value)}
-        />
-        <input
-          type="date"
-          className="border p-2 w-full"
-          value={checkOut}
-          onChange={(e) => setCheckOut(e.target.value)}
-        />
+        <button
+          onClick={() => router.push("/guest/budget?type=villa")}
+          className="border border-neutral-700 rounded-xl p-10 hover:bg-neutral-900 transition"
+        >
+          <h2 className="text-2xl font-semibold mb-2">Villas</h2>
+          <p className="text-gray-400 text-sm">
+            Private luxury stays
+          </p>
+        </button>
+
       </div>
 
-      {/* TYPE */}
-      <div className="flex gap-4">
-        <button
-          className={`px-4 py-2 rounded ${
-            type === "room" ? "bg-black text-white" : "border"
-          }`}
-          onClick={() => setType("room")}
-        >
-          Rooms
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${
-            type === "villa" ? "bg-black text-white" : "border"
-          }`}
-          onClick={() => setType("villa")}
-        >
-          Villas
-        </button>
+      {/* Sponsored placeholder */}
+      <div className="mt-16 w-full max-w-xl">
+        <div className="border border-dashed border-neutral-700 rounded-xl p-6 text-center text-gray-500">
+          Sponsored Property
+        </div>
       </div>
-
-      {/* BUDGET */}
-      <select
-        className="border p-2 w-full"
-        value={budget}
-        onChange={(e) => setBudget(e.target.value)}
-      >
-        <option value="">Select Budget</option>
-
-        {type === "room" && (
-          <>
-            <option value="0-999">₹999</option>
-            <option value="1000-1299">₹1299</option>
-            <option value="1300-1699">₹1699</option>
-            <option value="1700-1999">₹1999</option>
-            <option value="2000-99999">₹2499+</option>
-          </>
-        )}
-
-        {type === "villa" && (
-          <>
-            <option value="0-7999">₹4,999–₹7,999</option>
-            <option value="8000-12999">₹7,999–₹12,999</option>
-            <option value="13000-19999">₹12,999–₹19,999</option>
-            <option value="20000-99999">₹19,999+</option>
-          </>
-        )}
-      </select>
-
-      <button
-        onClick={proceed}
-        className="bg-black text-white px-6 py-3 rounded w-full"
-      >
-        Show Stays
-      </button>
     </main>
   );
 }

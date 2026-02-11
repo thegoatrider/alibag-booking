@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PropertyCalendar from "./PropertyCalendar";
 import LeadFunnelMetrics from "./LeadFunnelMetrics";
-
+import PropertyImages from "./components/PropertyImages";
 export default function OwnerDashboard() {
   const [tab, setTab] = useState<"leads" | "properties">("leads");
 
@@ -316,6 +316,9 @@ ${link}`;
               <div className="bg-neutral-900 border border-neutral-700 rounded p-6">
                 <PropertyCalendar propertyId={propertyId} />
               </div>
+              <div className="border rounded p-6">
+    <PropertyImages propertyId={propertyId} />
+  </div>
 
               <div className="bg-neutral-900 border border-neutral-700 rounded p-6 space-y-3">
                 <h2 className="font-semibold text-lg border-b border-neutral-700 pb-2">

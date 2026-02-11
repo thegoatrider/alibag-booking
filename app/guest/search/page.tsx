@@ -65,7 +65,7 @@ export default function GuestSearchPage() {
 
         <button
           onClick={search}
-          className="bg-black text-white w-full py-2 rounded"
+          className="bg-black text-gray-900 w-full py-2 rounded"
         >
           Search
         </button>
