@@ -74,10 +74,10 @@ const [range, setRange] = useState<DateRange | undefined>({
 };
 
   return (
-    <div className="bg-white rounded-full shadow-2xl px-9 py-4 flex items-center justify-between gap-6 w-full max-w-3xl mx-auto border border-gray-200">
+    <div className="bg-black rounded-full shadow-2xl px-9 py-4 flex items-center justify-between gap-6 w-full max-w-3xl mx-auto border border-gray-200">
 
 
-      <div className="grid grid-cols-3 gap-17 border rounded-full p-2 shadow-sm bg-white">
+      <div className="grid grid-cols-3 gap-17 border rounded-full p-2 shadow-sm bg-black">
   
   {/* CHECK-IN */}
   <button

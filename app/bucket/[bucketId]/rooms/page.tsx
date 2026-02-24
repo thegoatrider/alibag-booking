@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { getAvailableRooms } from "@/lib/availability";
+import { SkeletonGrid } from "@/components/ui/skeletons";
 
 export default function RoomsPage() {
   const { bucketId } = useParams();
@@ -25,7 +26,13 @@ export default function RoomsPage() {
     load();
   }, [bucketId, checkIn, checkOut]);
 
-  if (loading) return <p className="p-10">Checking availability...</p>;
+if (loading) {
+  return (
+    <main className="p-6">
+      <SkeletonGrid count={6} />
+    </main>
+  );
+}
 
   return (
     <main className="p-10">

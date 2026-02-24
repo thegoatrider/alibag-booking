@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { SkeletonGrid } from "@/components/ui/skeletons";
 
 export default function GuestResultsPage() {
   const searchParams = useSearchParams();
@@ -45,9 +46,14 @@ export default function GuestResultsPage() {
     setLoading(false);
   };
 
-  if (loading) {
-    return <p className="p-6">Loading results…</p>;
-  }
+if (loading) {
+  return (
+    <main className="p-6">
+      <SkeletonGrid count={6} />
+    </main>
+  );
+}
+
 
   if (properties.length === 0) {
     return <p className="p-6">No properties found for this budget.</p>;

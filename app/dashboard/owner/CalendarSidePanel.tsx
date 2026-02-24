@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import Card from "@/components/ui/Card";
 
 type Props = {
   propertyId: string;
@@ -51,11 +52,28 @@ export default function CalendarSidePanel({
   };
 
   return (
-    <div className="fixed top-0 right-0 w-96 h-full bg-white text-black shadow-xl p-6 overflow-y-auto z-50">
+    <Card className="p-6">
+  <div className="flex items-center justify-between mb-6">
+    <h2 className="text-lg font-semibold">
+      Availability Calendar
+    </h2>
+
+    <div className="flex gap-2">
+      <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
+        ← Prev
+      </button>
+      <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
+        Next →
+      </button>
+    </div>
+  </div>
+
+  <div className="fixed top-0 right-0 w-96 h-full bg-white text-black shadow-xl p-6 overflow-y-auto z-50">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-bold text-lg">{date}</h2>
         <button onClick={onClose}>✕</button>
       </div>
+
 
       {/* LEADS */}
       <section className="mb-6">
@@ -69,6 +87,7 @@ export default function CalendarSidePanel({
         ))}
       </section>
 
+
       {/* BOOKINGS */}
       <section className="mb-6">
         <h3 className="font-semibold mb-2">Booked Rooms</h3>
@@ -79,6 +98,7 @@ export default function CalendarSidePanel({
           </div>
         ))}
       </section>
+
 
       {/* BLOCKED */}
       <section>
@@ -91,5 +111,7 @@ export default function CalendarSidePanel({
         ))}
       </section>
     </div>
+  
+</Card>
   );
-}
+};

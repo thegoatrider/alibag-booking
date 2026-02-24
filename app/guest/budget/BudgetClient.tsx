@@ -21,7 +21,7 @@ export default function BudgetPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white px-6 py-10 max-w-6xl mx-auto">
+    <main className="min-h-screen bg-black px-6 py-10 max-w-6xl mx-auto">
       {/* HEADER */}
       <h1 className="text-3xl font-semibold mb-2">Alibag</h1>
       <p className="text-gray-500 mb-8">

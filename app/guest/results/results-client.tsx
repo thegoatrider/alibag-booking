@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import ResultsMap from "../../../components/ResultsMap";
 import { useRouter } from "next/navigation";
+import { SkeletonGrid } from "@/components/ui/skeletons";
 
 export default function ResultsClient({
   budget,
@@ -54,56 +55,81 @@ export default function ResultsClient({
     setLoading(false);
   };
 
+  /* ================= LOADING ================= */
+
   if (loading) {
-    return <div className="p-10">Loading stays…</div>;
+    return (
+      <main className="min-h-screen bg-[#0b0b0f] p-6">
+        <SkeletonGrid count={6} />
+      </main>
+    );
   }
 
+  /* ================= UI ================= */
+
   return (
-  <div className="relative w-full h-[calc(100vh-160px)]">
+    <main className="min-h-screen bg-[#0b0b0f] text-gray-100">
+      <div className="relative w-full h-[calc(100vh-160px)]">
 
-    {/* 🗺 MAP — LEFT FIXED */}
-    <div className="hidden md:block fixed left-0 top-[173px] w-[50%] h-[calc(100vh-200px)] px-6">
-      <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl">
-        <ResultsMap properties={properties} />
-      </div>
-    </div>
-
-    {/* 🏡 PROPERTY CARDS — RIGHT SCROLLABLE */}
-    <div className="ml-[50%] w-[50%] px-8 py-0 overflow-y-auto h-[calc(100vh-160px)]">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {properties.map((p) => (
-          <div
-            key={p.id}
-            className="cursor-pointer"
-            onClick={() => router.push(`/guest/property/${p.id}`)}
-          >
-            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
-              {p.property_images?.[0]?.image_url ? (
-                <img
-                  src={p.property_images[0].image_url}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  No image
-                </div>
-              )}
-            </div>
-
-            <div className="mt-3">
-              <h3 className="font-medium">{p.name}</h3>
-              <p className="text-sm text-gray-500">
-                {p.areas?.name}, Alibag
-              </p>
-              <p className="mt-1 font-semibold">
-                ₹{p.starting_price} / night
-              </p>
-            </div>
+        {/* 🗺 MAP — LEFT FIXED */}
+        <div className="hidden md:block fixed left-0 top-[173px] w-[50%] h-[calc(100vh-200px)] px-6">
+          <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl border border-white/10">
+            <ResultsMap properties={properties} />
           </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+        </div>
 
+        {/* 🏡 PROPERTY CARDS — RIGHT */}
+        <div className="md:ml-[50%] w-full md:w-[50%] px-6 md:px-8 py-6 overflow-y-auto h-[calc(100vh-160px)]">
+
+          {properties.length === 0 && (
+            <div className="text-center text-gray-400 py-20">
+              No stays found in this budget.
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {properties.map((p) => (
+              <div
+                key={p.id}
+                className="cursor-pointer group"
+                onClick={() => router.push(`/guest/property/${p.id}`)}
+              >
+                {/* IMAGE */}
+                <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-800 border border-white/10">
+                  {p.property_images?.[0]?.image_url ? (
+                    <img
+                      src={p.property_images[0].image_url}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                      No image
+                    </div>
+                  )}
+                </div>
+
+                {/* TEXT */}
+                <div className="mt-3 space-y-1">
+                  <h3 className="font-semibold text-white">
+                    {p.name}
+                  </h3>
+
+                  <p className="text-sm text-gray-400">
+                    {p.areas?.name}, Alibag
+                  </p>
+
+                  <p className="font-semibold text-white">
+                    ₹{p.starting_price}{" "}
+                    <span className="text-gray-400 font-normal">
+                      / night
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }

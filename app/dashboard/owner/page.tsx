@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import PropertyCalendar from "./PropertyCalendar";
 import LeadFunnelMetrics from "./LeadFunnelMetrics";
 import PropertyImages from "./components/PropertyImages";
+
 export default function OwnerDashboard() {
   const [tab, setTab] = useState<"leads" | "properties">("leads");
 
@@ -25,6 +26,8 @@ export default function OwnerDashboard() {
   const [roomName, setRoomName] = useState("");
   const [roomPrice, setRoomPrice] = useState("");
 
+  /* ================= EFFECTS ================= */
+
   useEffect(() => {
     fetchOwners();
   }, []);
@@ -40,7 +43,7 @@ export default function OwnerDashboard() {
     if (propertyId) fetchRooms(propertyId);
   }, [propertyId]);
 
-  /* ---------- DATA ---------- */
+  /* ================= DATA ================= */
 
   const fetchOwners = async () => {
     const { data } = await supabase.from("owners").select("*");
@@ -77,7 +80,7 @@ export default function OwnerDashboard() {
     setRooms(data || []);
   };
 
-  /* ---------- ACTIONS ---------- */
+  /* ================= ACTIONS ================= */
 
   const sendLead = async () => {
     if (!phone || !checkIn || !checkOut || !propertyId) {
@@ -162,57 +165,160 @@ ${link}`;
       dropped: "bg-red-600",
     }[status] || "bg-gray-600");
 
-  /* ---------- UI ---------- */
+  /* ================= UI ================= */
 
   return (
-    <main className="p-10 max-w-6xl space-y-6 bg-black min-h-screen text-white">
-      <h1 className="text-2xl font-bold">Owner Dashboard</h1>
+    <main className="min-h-screen bg-[#0f0f14] text-white">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* HEADER */}
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Owner Dashboard
+          </h1>
+          <p className="text-gray-400 mt-1">
+            Manage your properties and availability
+          </p>
+        </div>
 
-      {/* TABS */}
-      <div className="flex gap-4">
-        {["leads", "properties"].map((t) => (
+        {/* TABS */}
+        <div className="flex gap-3">
           <button
-            key={t}
-            onClick={() => setTab(t as any)}
-            className={`px-4 py-2 rounded ${
-              tab === t
-                ? "bg-indigo-600 text-white"
-                : "bg-neutral-800 border border-neutral-700 text-gray-300"
+            onClick={() => setTab("leads")}
+            className={`px-5 py-2.5 rounded-xl font-medium transition ${
+              tab === "leads"
+                ? "bg-purple-600 text-white shadow-lg"
+                : "bg-white/5 hover:bg-white/10 border border-white/10"
             }`}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            Leads
           </button>
-        ))}
-      </div>
 
-      {/* OWNER SELECT */}
-      <select
-        className="bg-neutral-800 border border-neutral-600 p-2 w-full text-white"
-        value={ownerId}
-        onChange={(e) => setOwnerId(e.target.value)}
-      >
-        <option value="">Select Owner</option>
-        {owners.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.email}
-          </option>
-        ))}
-      </select>
+          <button
+            onClick={() => setTab("properties")}
+            className={`px-5 py-2.5 rounded-xl font-medium transition ${
+              tab === "properties"
+                ? "bg-purple-600 text-white shadow-lg"
+                : "bg-white/5 hover:bg-white/10 border border-white/10"
+            }`}
+          >
+            Properties
+          </button>
+        </div>
 
-      {/* ================= LEADS ================= */}
-      {tab === "leads" && ownerId && (
-        
-        <div className="space-y-6">
-          <LeadFunnelMetrics ownerId={ownerId} />
+        {/* OWNER SELECT */}
+        <div className="max-w-md">
+          <select
+            className="w-full rounded-xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            value={ownerId}
+            onChange={(e) => setOwnerId(e.target.value)}
+          >
+            <option value="">Select Owner</option>
+            {owners.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.email}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {/* NEW ENQUIRY */}
-          <div className="bg-neutral-900 border border-neutral-700 rounded p-6 space-y-3">
-            <h2 className="font-semibold text-lg border-b border-neutral-700 pb-2">
-              New Enquiry
-            </h2>
+        {/* ================= LEADS TAB ================= */}
+        {tab === "leads" && ownerId && (
+          <div className="space-y-6">
+            <LeadFunnelMetrics ownerId={ownerId} />
 
+            {/* NEW ENQUIRY */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+              <h2 className="font-semibold text-lg">New Enquiry</h2>
+
+              <select
+                className="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10"
+                value={propertyId}
+                onChange={(e) => setPropertyId(e.target.value)}
+              >
+                <option value="">Select Property</option>
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                className="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10"
+                placeholder="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  className="flex-1 rounded-lg px-3 py-2 bg-white/5 border border-white/10"
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                />
+                <input
+                  type="date"
+                  className="flex-1 rounded-lg px-3 py-2 bg-white/5 border border-white/10"
+                  value={checkOut}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                />
+              </div>
+
+              <button
+                onClick={sendLead}
+                className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-xl font-semibold"
+              >
+                Send Property Link
+              </button>
+            </div>
+
+            {/* LEADS TABLE */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="text-gray-400 text-sm">
+                  <tr>
+                    <th className="py-2">Phone</th>
+                    <th>Status</th>
+                    <th>Dates</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.map((l) => (
+                    <tr key={l.id} className="border-t border-white/10">
+                      <td className="py-2">{l.phone}</td>
+                      <td>
+                        <span
+                          className={`px-3 py-1 rounded text-xs ${statusColor(
+                            l.status
+                          )}`}
+                        >
+                          {l.status}
+                        </span>
+                      </td>
+                      <td>
+                        {l.check_in} → {l.check_out}
+                      </td>
+                    </tr>
+                  ))}
+                  {leads.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-4 text-gray-500">
+                        No leads yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ================= PROPERTIES TAB ================= */}
+        {tab === "properties" && ownerId && (
+          <div className="space-y-6">
             <select
-              className="bg-neutral-800 border border-neutral-600 p-2 w-full"
+              className="w-full max-w-md rounded-xl px-4 py-3 bg-white/5 border border-white/10"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             >
@@ -224,153 +330,67 @@ ${link}`;
               ))}
             </select>
 
-            <input
-              className="bg-neutral-800 border border-neutral-600 p-2 w-full"
-              placeholder="Phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-
-            <div className="flex gap-2">
-              <input
-                type="date"
-                className="bg-neutral-800 border border-neutral-600 p-2 flex-1"
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-              />
-              <input
-                type="date"
-                className="bg-neutral-800 border border-neutral-600 p-2 flex-1"
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-              />
-            </div>
-
-            <button
-              onClick={sendLead}
-              className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
-            >
-              Send Property Link
-            </button>
-          </div>
-
-          {/* LEADS TABLE */}
-          <div className="bg-neutral-900 border border-neutral-700 rounded p-4">
-            <table className="w-full text-left">
-              <thead className="text-gray-400">
-                <tr className="border-b border-neutral-700">
-                  <th className="py-2">Phone</th>
-                  <th>Status</th>
-                  <th>Dates</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((l) => (
-                  <tr key={l.id} className="border-b border-neutral-800">
-                    <td className="py-2">{l.phone}</td>
-                    <td>
-                      <span
-                        className={`px-3 py-1 rounded text-xs ${statusColor(
-                          l.status
-                        )}`}
-                      >
-                        {l.status}
-                      </span>
-                    </td>
-                    <td>
-                      {l.check_in} → {l.check_out}
-                    </td>
-                  </tr>
-                ))}
-                {leads.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="py-4 text-gray-500">
-                      No leads yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ================= PROPERTIES ================= */}
-      {tab === "properties" && ownerId && (
-        <div className="space-y-6">
-          <select
-            className="bg-neutral-800 border border-neutral-600 p-2 w-full"
-            value={propertyId}
-            onChange={(e) => setPropertyId(e.target.value)}
-          >
-            <option value="">Select Property</option>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-
-          {propertyId && (
-            <>
-              <div className="bg-neutral-900 border border-neutral-700 rounded p-6">
-                <PropertyCalendar propertyId={propertyId} />
-              </div>
-              <div className="border rounded p-6">
-    <PropertyImages propertyId={propertyId} />
-  </div>
-
-              <div className="bg-neutral-900 border border-neutral-700 rounded p-6 space-y-3">
-                <h2 className="font-semibold text-lg border-b border-neutral-700 pb-2">
-                  Rooms
-                </h2>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-neutral-800 border border-neutral-600 p-2 flex-1"
-                    placeholder="Room name"
-                    value={roomName}
-                    onChange={(e) => setRoomName(e.target.value)}
-                  />
-                  <input
-                    className="bg-neutral-800 border border-neutral-600 p-2 w-32"
-                    placeholder="Price"
-                    value={roomPrice}
-                    onChange={(e) => setRoomPrice(e.target.value)}
-                  />
-                  <button
-                    onClick={addRoom}
-                    className="bg-indigo-600 hover:bg-indigo-700 px-4"
-                  >
-                    Add
-                  </button>
+            {propertyId && (
+              <>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <PropertyCalendar propertyId={propertyId} />
                 </div>
 
-                {rooms.map((r) => (
-                  <div
-                    key={r.id}
-                    className="flex justify-between items-center border border-neutral-700 p-2 rounded"
-                  >
-                    <div>
-                      {r.name} — ₹{r.price}
-                    </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <PropertyImages propertyId={propertyId} />
+                </div>
+
+                {/* ROOMS */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+                  <h2 className="font-semibold text-lg">Rooms</h2>
+
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-lg px-3 py-2 bg-white/5 border border-white/10"
+                      placeholder="Room name"
+                      value={roomName}
+                      onChange={(e) => setRoomName(e.target.value)}
+                    />
+                    <input
+                      className="w-32 rounded-lg px-3 py-2 bg-white/5 border border-white/10"
+                      placeholder="Price"
+                      value={roomPrice}
+                      onChange={(e) => setRoomPrice(e.target.value)}
+                    />
                     <button
-                      onClick={() => toggleRoom(r.id, r.is_active)}
-                      className={`px-3 py-1 rounded ${
-                        r.is_active
-                          ? "bg-green-600"
-                          : "bg-neutral-600"
-                      }`}
+                      onClick={addRoom}
+                      className="bg-purple-600 hover:bg-purple-700 px-5 rounded-lg font-semibold"
                     >
-                      {r.is_active ? "Active" : "Inactive"}
+                      Add
                     </button>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
+
+                  {rooms.map((r) => (
+                    <div
+                      key={r.id}
+                      className="flex justify-between items-center border border-white/10 p-3 rounded-xl"
+                    >
+                      <div>
+                        {r.name} — ₹{r.price}
+                      </div>
+                      <button
+                        onClick={() => toggleRoom(r.id, r.is_active)}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                          r.is_active
+                            ? "bg-green-600"
+                            : "bg-white/10 text-gray-300"
+                        }`}
+                      >
+                        {r.is_active ? "Active" : "Inactive"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </main>
   );
 }
