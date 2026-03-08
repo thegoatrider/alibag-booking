@@ -5,10 +5,9 @@ import { supabase } from "@/lib/supabase";
 import ResultsMap from "../../../components/ResultsMap";
 import { useRouter } from "next/navigation";
 import { SkeletonGrid } from "@/components/ui/skeletons";
+import { useSearchParams } from "next/navigation";
 
 export default function ResultsClient({
-  budget,
-  type,
 }: {
   budget: number;
   type: "room" | "villa";
@@ -16,7 +15,13 @@ export default function ResultsClient({
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const checkin = searchParams.get("checkin");
+  const checkout = searchParams.get("checkout");
+  const guests = searchParams.get("guests");
 
+  const budget = Number(searchParams.get("budget") || 0);
+  const type = (searchParams.get("type") || "room")as "room" | "villa" ;
   useEffect(() => {
     fetchProperties();
   }, [budget, type]);
@@ -92,7 +97,12 @@ export default function ResultsClient({
               <div
                 key={p.id}
                 className="cursor-pointer group"
-                onClick={() => router.push(`/guest/property/${p.id}`)}
+                onClick={() =>
+router.push(
+`/guest/property/${p.id}?checkin=${checkin}&checkout=${checkout}&guests=${guests}`
+)
+}
+
               >
                 {/* IMAGE */}
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-800 border border-white/10">

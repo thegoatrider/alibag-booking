@@ -1,238 +1,155 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect,useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
 
-export default function AdminInfluencersPage() {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+type Influencer = {
 
-  const [influencers, setInfluencers] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
+id:string
+name:string
+instagram:string
+followers:number
+commission_percent:number
+approved:boolean
 
-  const [selectedInfluencer, setSelectedInfluencer] = useState("");
-  const [selectedProperty, setSelectedProperty] = useState("");
-  const [commission, setCommission] = useState("");
-  
-  const router = useRouter();
+}
 
-  const fetchAll = async () => {
-    const { data: infs } = await supabase.from("influencers").select("*");
-    const { data: props } = await supabase
-      .from("properties")
-      .select("id,name,slug");
+type Property = {
 
-    const { data: assigns } = await supabase
-      .from("influencer_properties")
-      .select(`
-        influencer_id,
-        property_id,
-        commission_percent,
-        properties ( id, name, slug )
-      `);
+id:string
+name:string
 
-    setInfluencers(infs || []);
-    setProperties(props || []);
-    setAssignments(assigns || []);
-  };
+}
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+export default function AdminInfluencers(){
 
-  // ✅ Create influencer
-  const createInfluencer = async () => {
-    if (!email) return alert("Enter email");
+const [influencers,setInfluencers] = useState<Influencer[]>([]);
+const [properties,setProperties] = useState([])
 
-    const { error } = await supabase.from("influencers").insert({
-      email,
-      name,
-    });
+useEffect(()=>{
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+loadProperties()
 
-    alert("Influencer created ✅");
-    setEmail("");
-    setName("");
-    fetchAll();
-  };
+},[])
 
-  // ✅ Assign influencer → property
-  const assignInfluencer = async () => {
-    if (!selectedInfluencer || !selectedProperty || !commission)
-      return alert("Fill all fields");
+const loadProperties = async()=>{
 
-    const { error } = await supabase.from("influencer_properties").upsert({
-      influencer_id: selectedInfluencer,
-      property_id: selectedProperty,
-      commission_percent: Number(commission),
-    });
+const { data:{user} } = await supabase.auth.getUser()
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+const { data:inf } = await supabase
+.from("influencers")
+.select("*")
+.eq("user_id",user.id)
+.single()
 
-    alert("Assigned successfully ✅");
-    setCommission("");
-    fetchAll();
-  };
+const { data } = await supabase
+.from("influencer_properties")
+.select(`
+property_id,
+properties (
+id,
+name
+)
+`)
+.eq("influencer_id",inf.id)
 
-  const generateLink = (propertySlug: string, influencerId: string) => {
-    return `${window.location.origin}/p/${propertySlug}?ref=${influencerId}`;
-  };
+setProperties(data || [])
 
-  return (
-    <main className="p-10 max-w-6xl space-y-10 text-white">
-      <h1 className="text-3xl font-bold">Influencers</h1>
-      <button
-  onClick={() => router.push("/dashboard/admin/influencers/earnings")}
-  className="bg-indigo-700 px-4 py-2 rounded"
+}
+
+
+const approve = async(id:string)=>{
+
+await supabase
+.from("influencers")
+.update({approved:true})
+.eq("id",id);
+
+load();
+
+};
+
+const assignProperty = async(influencerId:string, propertyId:string)=>{
+
+await supabase
+.from("influencer_properties")
+.insert({
+
+influencer_id:influencerId,
+property_id:propertyId
+
+});
+
+alert("Property assigned");
+
+};
+
+return(
+
+<div className="p-10 space-y-6">
+
+<h1 className="text-3xl font-bold">
+Influencers
+</h1>
+
+{influencers.map((inf)=> (
+
+<div key={inf.id} className="border p-4 rounded space-y-3">
+
+<div className="font-semibold">
+{inf.name}
+</div>
+
+<div>
+Instagram: {inf.instagram}
+</div>
+
+<div>
+Followers: {inf.followers}
+</div>
+
+<div>
+Commission: {inf.commission_percent}%
+</div>
+
+<div>
+Status: {inf.approved ? "Approved" : "Pending"}
+</div>
+
+{!inf.approved && (
+
+<button
+onClick={()=>approve(inf.id)}
+className="bg-green-600 text-white px-3 py-1 rounded"
 >
-  View Earnings Dashboard
+Approve
 </button>
 
-      {/* CREATE */}
-      <div className="border border-neutral-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-xl font-semibold">Create Influencer</h2>
+)}
 
-        <input
-          className="w-full bg-neutral-900 border border-neutral-600 p-2 rounded"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+<select
+onChange={(e)=>assignProperty(inf.id,e.target.value)}
+className="border p-2"
+>
 
-        <input
-          className="w-full bg-neutral-900 border border-neutral-600 p-2 rounded"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+<option>Select property</option>
 
-        <button
-          onClick={createInfluencer}
-          className="bg-indigo-600 px-6 py-2 rounded"
-        >
-          Create Influencer
-        </button>
-      </div>
+{properties.map((p)=> (
 
-      {/* LIST */}
-      <div className="border border-neutral-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-xl font-semibold">All Influencers</h2>
+<option key={p.id} value={p.id}>
+{p.name}
+</option>
 
-        {influencers.map((i) => {
-          const myAssignments = assignments.filter(
-            (a) => a.influencer_id === i.id
-          );
+))}
 
-          return (
-            <div
-              key={i.id}
-              className="border border-neutral-700 p-4 rounded space-y-3"
-            >
-              <div className="flex justify-between">
-                <div>
-                  <div className="font-medium">{i.name || "—"}</div>
-                  <div className="text-sm text-gray-400">{i.email}</div>
-                </div>
-                <div className="text-sm text-indigo-400">
-                  ID: {i.id.slice(0, 8)}
-                </div>
-              </div>
+</select>
 
-              {/* ASSIGNED PROPERTIES */}
-              {myAssignments.length > 0 && (
-                <div className="space-y-2 text-sm">
-                  <div className="text-gray-400">Assigned Properties</div>
+</div>
 
-                  {myAssignments.map((a: any) => {
-                    const link = generateLink(
-                      a.properties.slug,
-                      i.id
-                    );
+))}
 
-                    return (
-                      <div
-                        key={a.property_id}
-                        className="flex justify-between items-center border border-neutral-800 p-2 rounded"
-                      >
-                        <div>
-                          <div>{a.properties.name}</div>
-                          <div className="text-xs text-gray-400">
-                            {a.commission_percent}% commission
-                          </div>
-                        </div>
+</div>
 
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(link);
-                            alert("Influencer link copied ✅");
-                          }}
-                          className="text-xs border px-3 py-1 rounded"
-                        >
-                          Copy Link
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+)
 
-      {/* ASSIGN */}
-      <div className="border border-neutral-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-xl font-semibold">Assign to Property</h2>
-
-        <select
-          className="w-full bg-neutral-900 border border-neutral-600 p-2 rounded"
-          value={selectedInfluencer}
-          onChange={(e) => setSelectedInfluencer(e.target.value)}
-        >
-          <option value="">Select Influencer</option>
-          {influencers.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.email}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="w-full bg-neutral-900 border border-neutral-600 p-2 rounded"
-          value={selectedProperty}
-          onChange={(e) => setSelectedProperty(e.target.value)}
-        >
-          <option value="">Select Property</option>
-          {properties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-
-        <input
-          className="w-full bg-neutral-900 border border-neutral-600 p-2 rounded"
-          placeholder="Commission %"
-          value={commission}
-          onChange={(e) => setCommission(e.target.value)}
-        />
-
-        <button
-          onClick={assignInfluencer}
-          className="bg-indigo-600 px-6 py-2 rounded"
-        >
-          Assign Influencer
-        </button>
-      </div>
-    </main>
-  );
 }

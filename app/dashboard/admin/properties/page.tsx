@@ -2,238 +2,243 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
-import { SkeletonGrid } from "@/components/ui/skeletons";
 
-export default function AdminPropertiesPage() {
-  const router = useRouter();
+type Property = {
+  id: string;
+  name: string;
+};
 
-  const [owners, setOwners] = useState<any[]>([]);
-  const [areas, setAreas] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
+type InfluencerProperty = {
+  property_id: string;
+};
 
-  const [ownerName, setOwnerName] = useState("");
-  const [ownerEmail, setOwnerEmail] = useState("");
+export default function InfluencerPropertiesPage() {
 
-  const [ownerId, setOwnerId] = useState("");
-  const [name, setName] = useState("");
-  const [type, setType] = useState<"room" | "villa">("room");
-  const [areaId, setAreaId] = useState("");
-  const [price, setPrice] = useState("");
-
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [influencerId, setInfluencerId] = useState<string | null>(null);
+
+  const [stats, setStats] = useState<any>({});
+
   useEffect(() => {
-    fetchAll();
+    loadInfluencer();
   }, []);
 
-  const fetchAll = async () => {
+  const loadInfluencer = async () => {
+
+    const { data: user } = await supabase.auth.getUser();
+
+    if (!user?.user?.email) return;
+
+    const { data: influencer } = await supabase
+      .from("influencers")
+      .select("*")
+      .eq("email", user.user.email)
+      .single();
+
+    if (!influencer) return;
+
+    setInfluencerId(influencer.id);
+
+    loadProperties(influencer.id);
+  };
+
+  const loadProperties = async (infId: string) => {
+
     setLoading(true);
 
-    const { data: ownersData } = await supabase
-      .from("owners")
-      .select("*");
+    const { data: assignments } = await supabase
+      .from("influencer_properties")
+      .select("property_id")
+      .eq("influencer_id", infId);
 
-    const { data: areasData } = await supabase
-      .from("areas")
-      .select("*");
+    if (!assignments || assignments.length === 0) {
+      setLoading(false);
+      return;
+    }
 
-    const { data: propertiesData } = await supabase
+    const propertyIds = assignments.map((a: InfluencerProperty) => a.property_id);
+
+    const { data: props } = await supabase
       .from("properties")
-      .select(`
-        id,
-        name,
-        type,
-        starting_price,
-        areas ( name ),
-        owners ( name, email )
-      `);
+      .select("id,name")
+      .in("id", propertyIds);
 
-    setOwners(ownersData || []);
-    setAreas(areasData || []);
-    setProperties(propertiesData || []);
+    setProperties(props || []);
+
+    loadStats(propertyIds, infId);
+
     setLoading(false);
   };
 
-  const createOwner = async () => {
-    if (!ownerName || !ownerEmail) {
-      alert("Fill owner name & email");
-      return;
-    }
+  const loadStats = async (propertyIds: string[], infId: string) => {
 
-    await supabase.from("owners").insert({
-      name: ownerName,
-      email: ownerEmail,
+    const { data: clicks } = await supabase
+      .from("influencer_clicks")
+      .select("*")
+      .eq("influencer_id", infId);
+
+    const { data: bookings } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("influencer_id", infId);
+
+    const propertyStats: any = {};
+
+    propertyIds.forEach(id => {
+      propertyStats[id] = {
+        clicks: 0,
+        bookings: 0,
+        revenue: 0
+      };
     });
 
-    setOwnerName("");
-    setOwnerEmail("");
-    fetchAll();
-  };
-
-  const createProperty = async () => {
-    if (!ownerId || !name || !areaId || !price) {
-      alert("Fill all property fields");
-      return;
-    }
-
-    await supabase.from("properties").insert({
-      owner_id: ownerId,
-      name,
-      type,
-      area_id: areaId,
-      starting_price: Number(price),
+    clicks?.forEach(c => {
+      if (propertyStats[c.property_id]) {
+        propertyStats[c.property_id].clicks++;
+      }
     });
 
-    setName("");
-    setPrice("");
-    fetchAll();
+    bookings?.forEach(b => {
+      if (propertyStats[b.property_id]) {
+        propertyStats[b.property_id].bookings++;
+        propertyStats[b.property_id].revenue += b.amount || 0;
+      }
+    });
+
+    setStats(propertyStats);
   };
 
-if (loading) {
+  const copyLink = (propertyId: string) => {
+
+    const link = `${window.location.origin}/guest/property/${propertyId}?ref=${influencerId}`;
+
+    navigator.clipboard.writeText(link);
+
+    alert("Referral link copied!");
+  };
+
+  if (loading) {
+
+    return (
+      <main className="p-10">
+        Loading properties...
+      </main>
+    );
+  }
+
   return (
-    <main className="p-6">
-      <SkeletonGrid count={6} />
-    </main>
-  );
-}
 
+    <main className="p-10">
 
+      <h1 className="text-3xl font-semibold mb-8">
+        My Promotion Properties
+      </h1>
 
-  return (
-    <main className="min-h-screen bg-neutral-950 text-white">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
-        <h1 className="text-3xl font-semibold">
-          Admin · Properties
-        </h1>
+      {properties.length === 0 && (
+        <div className="text-gray-500">
+          No properties assigned yet.
+        </div>
+      )}
 
-        {/* CREATE OWNER */}
-        <section className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-3">
-          <h2 className="text-xl font-semibold">Create Owner</h2>
+      <div className="space-y-6">
 
-          <input
-            className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2"
-            placeholder="Owner name"
-            value={ownerName}
-            onChange={(e) => setOwnerName(e.target.value)}
-          />
+        {properties.map((p) => {
 
-          <input
-            className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2"
-            placeholder="Owner email"
-            value={ownerEmail}
-            onChange={(e) => setOwnerEmail(e.target.value)}
-          />
+          const propertyStats = stats[p.id] || {
+            clicks: 0,
+            bookings: 0,
+            revenue: 0
+          };
 
-          <button
-            onClick={createOwner}
-            className="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-xl font-semibold"
-          >
-            Add Owner
-          </button>
-        </section>
+          const commission = Math.round(propertyStats.revenue * 0.1);
 
-        {/* CREATE PROPERTY */}
-        <section className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-3">
-          <h2 className="text-xl font-semibold">Create Property</h2>
+          const referralLink =
+            `${window.location.origin}/guest/property/${p.id}?ref=${influencerId}`;
 
-          <select
-            className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2"
-            value={ownerId}
-            onChange={(e) => setOwnerId(e.target.value)}
-          >
-            <option value="">Select Owner</option>
-            {owners.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name} — {o.email}
-              </option>
-            ))}
-          </select>
+          return (
 
-          <input
-            className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2"
-            placeholder="Property name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <select
-            className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2"
-            value={type}
-            onChange={(e) =>
-              setType(e.target.value as "room" | "villa")
-            }
-          >
-            <option value="room">Room</option>
-            <option value="villa">Villa</option>
-          </select>
-
-          <select
-            className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2"
-            value={areaId}
-            onChange={(e) => setAreaId(e.target.value)}
-          >
-            <option value="">Select Area</option>
-            {areas.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2"
-            placeholder="Starting price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-
-          <button
-            onClick={createProperty}
-            className="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-xl font-semibold"
-          >
-            Add Property
-          </button>
-        </section>
-
-        {/* LIST */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold">
-            All Properties
-          </h2>
-
-          {properties.map((p) => (
             <div
               key={p.id}
-              className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex justify-between items-center"
+              className="border rounded-xl p-6 bg-white shadow-sm"
             >
-              <div>
-                <div className="font-semibold">{p.name}</div>
-                <div className="text-sm text-gray-400">
-                  {p.type} • ₹{p.starting_price}
+
+              <div className="flex justify-between items-start">
+
+                <div>
+
+                  <h2 className="text-xl font-semibold">
+                    {p.name}
+                  </h2>
+
+                  <div className="text-sm text-gray-500 mt-2">
+                    Referral link
+                  </div>
+
+                  <div className="text-sm bg-gray-100 px-3 py-2 rounded mt-1 break-all">
+                    {referralLink}
+                  </div>
+
                 </div>
-                <div className="text-sm text-gray-500">
-                  Area: {p.areas?.name}
-                </div>
-                <div className="text-sm text-gray-500">
-                  Owner: {p.owners?.name}
-                </div>
+
+                <button
+                  onClick={() => copyLink(p.id)}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Copy Link
+                </button>
+
               </div>
 
-              <button
-                onClick={() =>
-                  router.push(
-                    `/dashboard/admin/properties/${p.id}`
-                  )
-                }
-                className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-xl font-semibold"
-              >
-                Manage Property
-              </button>
+              <div className="grid grid-cols-4 gap-6 mt-6 text-sm">
+
+                <div>
+                  <div className="text-gray-500">
+                    Clicks
+                  </div>
+                  <div className="text-lg font-semibold">
+                    {propertyStats.clicks}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-gray-500">
+                    Bookings
+                  </div>
+                  <div className="text-lg font-semibold">
+                    {propertyStats.bookings}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-gray-500">
+                    Revenue
+                  </div>
+                  <div className="text-lg font-semibold">
+                    ₹{propertyStats.revenue}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-gray-500">
+                    Commission
+                  </div>
+                  <div className="text-lg font-semibold text-green-600">
+                    ₹{commission}
+                  </div>
+                </div>
+
+              </div>
+
             </div>
-          ))}
-        </section>
+
+          );
+        })}
+
       </div>
+
     </main>
+
   );
 }
