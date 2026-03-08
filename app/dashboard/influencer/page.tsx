@@ -43,11 +43,13 @@ export default function InfluencerDashboard() {
 
     /* get influencer profile */
 
-    const { data: inf } = await supabase
-      .from("influencers")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+  const { data: inf } = await supabase
+  .from("influencers")
+  .select("*")
+  .eq("user_id", user!.id)
+  .single();
+
+
 
     if (!inf) {
       setLoading(false);

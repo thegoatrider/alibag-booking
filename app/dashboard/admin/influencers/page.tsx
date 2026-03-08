@@ -24,39 +24,29 @@ name:string
 export default function AdminInfluencers(){
 
 const [influencers,setInfluencers] = useState<Influencer[]>([]);
-const [properties,setProperties] = useState([])
+const [properties,setProperties] = useState<Property[]>([]);
 
 useEffect(()=>{
 
-loadProperties()
+load();
 
 },[])
 
-const loadProperties = async()=>{
+const load = async()=>{
 
-const { data:{user} } = await supabase.auth.getUser()
-
-const { data:inf } = await supabase
+const {data:inf} = await supabase
 .from("influencers")
 .select("*")
-.eq("user_id",user.id)
-.single()
+.order("created_at",{ascending:false});
 
-const { data } = await supabase
-.from("influencer_properties")
-.select(`
-property_id,
-properties (
-id,
-name
-)
-`)
-.eq("influencer_id",inf.id)
+const {data:prop} = await supabase
+.from("properties")
+.select("id,name");
 
-setProperties(data || [])
+setInfluencers(inf || []);
+setProperties(prop || []);
 
-}
-
+};
 
 const approve = async(id:string)=>{
 
